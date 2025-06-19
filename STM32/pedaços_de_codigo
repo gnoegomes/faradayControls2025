@@ -1,0 +1,60 @@
+POSSIVEL IMPLAUSABILIDADE APPS 
+
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+	 HAL_ADC_Start(&hadc1);
+	 HAL_ADC_Start(&hadc2);
+
+	 int check = 0;
+
+
+    if(HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY) == HAL_OK && HAL_ADC_PollForConversion(&hadc2, HAL_MAX_DELAY) == HAL_OK){
+   	 adcValue1 = HAL_ADC_GetValue(&hadc1);
+	 adcValue2 = HAL_ADC_GetValue(&hadc2);
+
+	    double difference = fabs(adcValue1 - adcValue2);
+	    double average = (adcValue1 + adcValue2) / 2.0;
+	    double percentageDifference = (difference / average) * 100.0;
+
+	  if(percentageDifference > 10.0){
+	    	 HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, 1);
+	     }
+	     else{
+	    	 HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, 0);
+   }
+
+     }
+
+
+POSSIVEL 2 
+
+double difference = fabs(appsValue1 + appsValue2);
+
+
+	 	 // Evita divisão por zero
+
+	 	        double percentageDifference = (difference / appsValue1) * 100.0;
+
+	 	        if (percentageDifference >= 10.0) {
+	 	            // Se a condição acaba de ser detectada, registra o tempo inicial
+	 	            if (!conditionActive) {
+	 	                conditionActive = true;
+	 	                startTime = HAL_GetTick();
+	 	            }
+	 	            // Se já estava ativa, verifica se passou 100ms
+	 	            else {
+	 	                if ((HAL_GetTick() - startTime) >= 100) {
+	 	                    // A condição se manteve por mais de 100ms: executa o shutdown
+	 	                    // SHUTDOWN: insira o código necessário aqui
+	 	                    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, 1);
+	 	                }
+	 	            }
+	 	        }
+	 	        else {
+	 	            // Se a condição não é satisfeita, reseta o flag e o timer
+	 	            conditionActive = false;
+	 	            HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, 0);
+	 	        }
+	 	    }
+

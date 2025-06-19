@@ -1,0 +1,23 @@
+PINOS 
+
+//Pinos ADC
+#define pinAPPS1 PBA0               //Acelerador 1                                  
+#define pinAPPS2 PBA2               //Acelerador 2
+#define pinBSE1 PBA1                //Freio 1 
+#define pinBSE2 PBA3                //Freio 2  
+#define pinSOCBMS ??          
+#define pinMHSSTA PB15              //Frequência de erro do IMD
+
+//Pinos Digitais
+#define TSSIR PB8
+#define TSSIG PB9
+#define pinRTD PB11                  // Pino de entrada do sinal RTD
+#define pinFBair                     // Pino de entrada do sinal do feedback AIR
+#define pinRTDS PB4                  // Pino Sirene 
+#define pinSDR PB10                  // Pino comando Relé de shutdown                                                         * 
+#define pinSDS PB14                  // Pino de saida do Seatswitch 
+#define pinSDF PB13                  // Pino de saida do Footswitch                                          
+#define pinSDA PB12                  // Pino de controle do sinal do acelerador
+#define pinBMSFault ??               // Pino Erro BMS
+#define pinIMDFault PB7              // Pino Erro IMD
+
