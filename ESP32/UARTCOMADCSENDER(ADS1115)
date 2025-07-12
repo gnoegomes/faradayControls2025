@@ -1,0 +1,111 @@
+#include <esp_now.h>
+#include <WiFi.h>
+#include <Adafruit_ADS1X15.h>
+
+
+Adafruit_ADS1115 ads;
+
+int implausabilidadeDObse;
+char byteZero = 0;
+char byteOne = 1;
+uint8_t broadcastAddress[] = {0x7c, 0x9e, 0xbd, 0x45, 0xba, 0xd0};
+
+typedef struct struct_message {
+  char a[32];
+  int implausabilidadeAPPS;
+  int implausabilidadeBSE;
+} struct_message;
+
+struct_message myData;
+esp_now_peer_info_t peerInfo;
+
+void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  Serial.print("\r\nLast Packet Send Status:\t");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+}
+
+void setup() {
+  Serial.begin(115200);
+  Serial2.begin(9600, SERIAL_8N1, 16, 17); // RX2 = 16, TX2 = 17
+
+  ads.setGain(GAIN_ONE); 
+   if (!ads.begin())
+  {
+    Serial.println("Failed to initialize ADS.");
+    while (1);
+  }
+
+  WiFi.mode(WIFI_STA);
+  esp_now_register_send_cb(OnDataSent);
+  memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+  peerInfo.channel = 0;  
+  peerInfo.encrypt = false;
+  
+
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+
+  if (esp_now_add_peer(&peerInfo) != ESP_OK){
+    Serial.println("Failed to add peer");
+    return;
+  }
+
+  Serial.println("ESP32 pronto.");
+}
+
+void loop() {
+  // 1. Verifica se STM32 mandou algo
+  if (Serial2.available()) {
+    int16_t adc0, adc1;
+    int recebido = Serial2.read();  // Lê e ignora (pode usar como trigger)
+
+    // 2. Faz as duas leituras ADC
+    adc0 = ads.readADC_SingleEnded(0);
+    adc1 = ads.readADC_SingleEnded(1);
+
+    // 3. Converte para 0 ou 1 com base em 3.0V (~3723 em 12 bits)
+    uint8_t bit1 = (adc0 >= 2500) ? 1 : 0;
+    uint8_t bit2 = (adc1 >= 2500) ? 1 : 0;
+
+    // 4. Envia os dois valores para o STM32
+
+    if (bit2 == 1 || bit1 == 1){
+      Serial2.write(byteOne); // Envia 1º bit
+      implausabilidadeDObse = 1;
+    }
+    else{
+     Serial2.write(byteZero); // Envia 2º bit
+      implausabilidadeDObse = 0;
+    }
+
+     // Envia 2º bit
+
+    // Opcional: imprimir no monitor serial
+    Serial.print("ADC1: "); Serial.print(adc0);
+    Serial.print(" => "); Serial.println(bit1);
+
+    Serial.print("ADC2: "); Serial.print(adc1);
+    Serial.print(" => "); Serial.println(bit2);
+    Serial.print("Recebido "); Serial.println(recebido);
+    Serial.println("---");
+
+   strcpy(myData.a, "Leituras");
+   myData.implausabilidadeAPPS = recebido;
+   myData.implausabilidadeBSE = implausabilidadeDObse;
+  
+    // Send message via ESP-NOW
+    esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
+   
+      if (result == ESP_OK) {
+    Serial.println("Sent with success");
+       }
+       else {
+    Serial.println("Error sending the data");
+  }
+
+    delay(50); // Espera antes de aceitar nova requisição
+  }
+
+}
